@@ -1,25 +1,31 @@
+use structopt::StructOpt;
 use std::fs::read_to_string;
 
+#[derive(StructOpt)]
+#[structopt(name = "grep")]
+struct GrepArgs {
+    #[structopt(name = "PATTERN")]
+    pattern: String,
+    #[structopt(name = "PATHS")]
+    paths: Vec<String>,
+}
+
 fn main() {
-    let path = std::env::args().nth(1);
-    let pattern = std::env::args().nth(2);
+    run(GrepArgs::from_args());
+}
 
-    match (path, pattern) {
-        (Some(path), Some(pattern)) => run(path, pattern),
-        _ => println!("no argument specified.")
+fn run(args: GrepArgs) {
+    for path in args.paths.iter() {
+        match read_to_string(path) {
+            Ok(content) => grep(&content, &args.pattern),
+            Err(reason) => println!("{}", reason),
+        }
     }
 }
 
-fn run(path: String, pattern: String) {
-    match read_to_string(path) {
-        Ok(content) => grep(content, pattern),
-        Err(reason) => println!("{}", reason)
-    }
-}
-
-fn grep(content: String, pattern: String) {
+fn grep(content: &str, pattern: &str) {
     for line in content.lines() {
-        if line.contains(pattern.as_str()) {
+        if line.contains(pattern) {
             println!("{}", line)
         }
     }
